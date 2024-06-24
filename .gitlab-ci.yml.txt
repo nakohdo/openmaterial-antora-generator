@@ -1,0 +1,127 @@
+# Cache docker images
+cache:
+  key: one-key-to-rule-them-all
+
+stages:
+  - build
+  - upload
+  - publish
+
+variables:              # Define a set of global variables for the pipeline
+  GIT_SUBMODULE_STRATEGY: normal
+  GIT_CREDENTIALS: "https://gitlab-ci-token:${CI_JOB_TOKEN}@code.asam.net"
+  EXTERNAL_REPO_URL: publications/standards.git
+  KROKI_MAX_URI_LENGTH: 20000
+  KROKI_BLOCKDIAG_HOST: blockdiag
+  KROKI_MERMAID_HOST: mermaid
+  PROJECT_NAME: ASAM_PLACEHOLDER
+
+antora_build_release:   # Build Antora when triggered by a tag in one of its source repos (upstream)
+  stage: build
+  image:
+    name: ghcr.io/asam-ev/project-guide-docker:4
+    entrypoint: [""]
+  # services:
+  #   - name: yuzutech/kroki
+  #     alias: kroki
+  tags:
+    - asciidoc
+  rules:
+    - if: $TAGGED_RELEASE
+    - when: never
+  variables:
+    SITE_SEARCH_PROVIDER: ALGOLIA
+    ALGOLIA_APP_ID: H1VJQITG6C
+    ALGOLIA_READ_API_KEY: 75a02201dd40dc09ae80f060056cfe79
+    ALGOLIA_INDEX_NAME: publications-pages-asam
+  script:
+    # For a tagged release to build only tagged content, the site.yml needs to be updated. Each content must explicitly exclude branches so that the default branch and such are not included in the build.
+    # Also, the search engine is switched from lunr to algolia for the output
+    - |
+      sed -i 's/branches: \[main, v*.*.*\]/branches: [v*.*.*]/g' site.yml
+      sed -i 's/branches: \[main\]/branches: ~/g' site.yml
+      sed -i "s|- require: '@antora/lunr-extension'||g" site.yml
+      sed -i -E 's/edit_url:(.*)/# edit_url:\1/g' site.yml
+    - cat site.yml
+    # Build Antora
+    - antora --stacktrace --fetch --clean site.yml
+  artifacts:
+    expose_as: 'antora_build'
+    paths:
+      - public/
+
+antora_build:          # Build Antora when not triggered by a release upstream.
+  stage: build
+  image:
+    name: ghcr.io/asam-ev/project-guide-docker:4
+    entrypoint: [""]
+  # services:
+  #   - name: yuzutech/kroki
+  #     alias: kroki
+  tags:
+    - asciidoc
+  rules:
+    - if: $TAGGED_RELEASE
+      when: never
+    - if: $CI_PIPELINE_SOURCE == 'trigger'
+    - if: $CI_PIPELINE_SOURCE == 'pipeline'
+    - if: $CI_PIPELINE_SOURCE == 'push'
+  script:
+    # If this job was triggered by a push to an upstream repo on a non-default branch, update the site.yml to include that branch instead of the default one.
+    # This allows the changes to be viewed in the respective Merge Request.
+    - |
+      if [[ $UPSTREAM_BRANCH ]]; then
+        echo "Replacing branch for ${UPSTREAM_REPO} with ${UPSTREAM_BRANCH}"
+        sed -r -i '\|- url: '"$UPSTREAM_REPO"'|{ n; s|(branches: )\[main, v*.*.*\]|\1[main, '"$UPSTREAM_BRANCH"', v*.*.*]| }' site.yml
+      fi
+    # Build Antora
+    - antora --stacktrace --fetch --clean site.yml
+  artifacts:
+    expose_as: 'antora_build'
+    paths:
+      - public/
+
+pages:                # Publish the built Antora output to GitLab pages. Runs only if triggered by a change to the generator or a push to the default branch in an upstream repo.
+  stage: upload
+  image: busybox
+  tags:
+    - asciidoc
+  rules:
+    - if: $TAGGED_RELEASE
+      when: never
+    - if: $UPSTREAM_BRANCH
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == 'trigger'
+  script:
+    - echo "The site will be deployed to $CI_PAGES_URL"
+  artifacts:
+    paths:
+      - public
+
+publish:              # If this pipeline was triggereed by a tagged release in an upstream repository, push the output to the publication group.
+                      # This is where all ASAM release will be automatically hosted through GitLab.
+  stage: publish
+  tags:
+    - asciidoc
+  rules:
+    - if: $TAGGED_RELEASE
+  before_script:
+    - git config --global user.email "pipeline@asam.net"
+    - git config --global user.name "GitLab Pipeline"
+  script:
+    - echo "Publishing the generated pages"
+    - echo "The created Antora output is pushed to publications/standards"
+    # Clone the publication repo and remove the current content for this project, then copy the new content and commit/push to the downstream repo
+    - git clone https://PUBLICATION_ACCESS_TOKEN:$PUBLICATION_ACCESS_TOKEN@code.asam.net/$EXTERNAL_REPO_URL downstream_repo
+    - rm -rf downstream_repo/public/${PROJECT_NAME}
+    - cp -R site downstream_repo/public/${PROJECT_NAME}
+    - cd downstream_repo
+    - git remote rm origin
+    - git remote add origin "https://PUBLICATION_ACCESS_TOKEN:$PUBLICATION_ACCESS_TOKEN@code.asam.net/$EXTERNAL_REPO_URL"
+    - git add .
+    - git commit -m "Updated ${PROJECT_NAME}"
+    - git push origin HEAD:main
+  needs:
+    - job: antora_build_release
+      artifacts: true

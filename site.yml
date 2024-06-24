@@ -1,0 +1,74 @@
+# tag::site[]
+site:
+  title: ASAM PLACEHOLDER # Replace this with the actual name! This is how the overall Antora instance will be named.
+  # the 404 page and sitemap files only get generated when the url property is set
+  url: "https://publications.pages.asam.net/standards/ASAM_PLACEHOLDER"
+  start_page: ASAM_PLACEHOLDER::index.adoc
+# end::site[]
+urls: # Creates a redirect for the newest version to the link "latest"
+  latest_version_segment_strategy: redirect:to
+  latest_version_segment: latest
+
+# tag::content[]
+content:
+  sources:
+    - url: https://code.asam.net/common/templates/standard-template.git # <1>
+      branches: [main, v*.*.*]
+      tags: [v*,V*]
+      start_path: .antora
+    # edit_url: 'https://code.asam.net/internal/examples/antora-content-base-structure/-/blob/{refname}/{path}'
+    - url: https://code.asam.net/common/asam-terminology.git # <2>
+      start_path: .antora
+      tags: [v*,V*]
+# end::content[]
+
+ui:
+  bundle:
+    url: https://code.asam.net/common/antora-ui/-/jobs/artifacts/main/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+  # supplemental_files: ./supplemental_ui # Activate this if you need to make local UI changes. Check the official Antora documentation for more information.
+
+output:
+  clean: true
+  dir: ./public
+
+runtime:
+  fetch: true
+
+# tag::attributes[]
+asciidoc:
+  attributes:
+    page-pagination: true
+    hide-uri-scheme: ""
+    kroki-server-url: 'http://kroki:8000'
+    kroki-fetch-diagram: ""
+    # Allow URI read to retrieve SVG on compilation
+    allow-uri-read: true
+    # use SVG unless otherwise specified
+    kroki-default-format: svg
+    # Make SVG inline so that we can get interactive (can be overridden by schema with "opts=none")
+    kroki-default-options: interactive
+    sectnums: "@"
+    xrefstyle: short@
+    listing-caption: Code
+    page-width-limit: none@
+    THIS_STANDARD: ASAM PLACEHOLDER
+
+
+# end::attributes[]
+
+  extensions:
+  - asciidoctor-kroki
+  - './asam-antora-extensions/asam-asciidoctor_extensions.js'
+  - './asam-antora-extensions/asam-asciidoctor_extensions-registered.js'
+
+antora:
+  extensions:
+    - require: '@antora/lunr-extension'
+    - require: './asam-antora-extensions/asam-antora_extension.js'
+      numbered_titles: true
+      section_number_style: 'iso'
+      alternate_xref_style: 'full'
+      loft: true
+      local_to_global_references: true
+      bibliography: true

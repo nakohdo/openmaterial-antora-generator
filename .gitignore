@@ -1,0 +1,8 @@
+*.html
+public/
+*.pyc
+.vscode/settings.json
+ui-bundle/
+checked_out_content_repo/
+test/
+site_local.yml
