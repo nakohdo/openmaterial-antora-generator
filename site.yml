@@ -69,6 +69,6 @@ antora:
       numbered_titles: true
       section_number_style: 'iso'
       alternate_xref_style: 'full'
-      loft: false #true
+      loft: true
       local_to_global_references: false # true
       bibliography: false # true
