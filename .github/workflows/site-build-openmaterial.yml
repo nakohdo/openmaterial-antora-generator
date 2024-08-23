@@ -26,7 +26,6 @@ jobs:
       mermaid:
         image: yuzutech/kroki-mermaid:0.15.1
 
-
     steps:
 
     # checkout repo into folder guide. This is done to match the setup for the local build in docker-compose
