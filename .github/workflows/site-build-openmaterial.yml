@@ -93,7 +93,7 @@ jobs:
     if: ${{ github.event_name != 'repository_dispatch' || contains(github.event.client_payload.ref, 'master') || contains(github.event.client_payload.ref, 'main') }}
     # Allow one concurrent deployment
     concurrency:
-      group: "pages"
+      group: github-pages # "pages"
       cancel-in-progress: true
 
     needs: build
