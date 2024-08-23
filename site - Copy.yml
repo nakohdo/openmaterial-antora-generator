@@ -1,9 +1,9 @@
 # tag::site[]
 site:
-  title: ASAM OpenMATERIAL (site.yml - nakohdo) # Replace this with the actual name! This is how the overall Antora instance will be named.
+  title: ASAM PLACEHOLDER # Replace this with the actual name! This is how the overall Antora instance will be named.
   # the 404 page and sitemap files only get generated when the url property is set
-  url: https://nakohdo.github.io/OpenMATERIAL/ # https://asam-ev.github.io/OpenMATERIAL/
-  start_page: asamopenmaterial:specification:index.adoc 
+  url: "https://publications.pages.asam.net/standards/ASAM_PLACEHOLDER"
+  start_page: ASAM_PLACEHOLDER::index.adoc
 # end::site[]
 urls: # Creates a redirect for the newest version to the link "latest"
   latest_version_segment_strategy: redirect:to
@@ -12,7 +12,7 @@ urls: # Creates a redirect for the newest version to the link "latest"
 # tag::content[]
 content:
   sources:
-    - url: https://github.com/nakohdo/OpenMATERIAL.git # https://github.com/asam-ev/OpenMATERIAL.git  # <1>
+    - url: https://code.asam.net/common/templates/standard-template.git # <1>
       branches: [main, v*.*.*]
       tags: [v*,V*]
       start_path: .antora
@@ -52,7 +52,7 @@ asciidoc:
     xrefstyle: short@
     listing-caption: Code
     page-width-limit: none@
-    THIS_STANDARD: ASAM OpenMATERIAL
+    THIS_STANDARD: ASAM PLACEHOLDER
 
 
 # end::attributes[]
