@@ -6,7 +6,7 @@ on:
   # schedule: # periodic - needed because some of the content is from the other repos
   #   - cron:  '30 5,20 * * *' # twice per day, in the morning and evening.
   repository_dispatch:
-    types: [antora-build-trigger] # is not triggered
+    types: [antora-build-trigger] 
   workflow_dispatch:
 
 jobs:
