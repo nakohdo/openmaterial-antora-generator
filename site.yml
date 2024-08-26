@@ -53,6 +53,8 @@ asciidoc:
     listing-caption: Code
     page-width-limit: none@
     THIS_STANDARD: ASAM OpenMATERIAL
+    # Additional settings
+    toclevels: 3
 
 
 # end::attributes[]
