@@ -2,7 +2,7 @@
 site:
   title: ASAM OpenMATERIAL (site.yml - nakohdo) # Replace this with the actual name! This is how the overall Antora instance will be named.
   # the 404 page and sitemap files only get generated when the url property is set
-  url: https://nakohdo.github.io/openmaterial-antora-generator/asamopenmaterial/latest/specification/ # https://asam-ev.github.io/OpenMATERIAL/
+  url: https://nakohdo.github.io/openmaterial-antora-generator/asamopenmaterial/latest/specification/ 
   start_page: asamopenmaterial:specification:index.adoc 
 # end::site[]
 urls: # Creates a redirect for the newest version to the link "latest"
