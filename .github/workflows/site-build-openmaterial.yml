@@ -66,16 +66,10 @@ jobs:
         sed -i -r "s|(- url: .*# retrieve content from remote)|# \1|g" site.yml
         sed -i -r "s|# (- url: .*# retrieve content locally)|\1|g" site.yml
         echo Checking out the target branch
-        cd open-simulation-interface
+        cd OpenMATERIAL
         git checkout ${HEAD_REF} 2>/dev/null || git checkout -b ${HEAD_REF}
         cd ..
-        cd osi-documentation
-        git checkout ${HEAD_REF} 2>/dev/null || git checkout -b ${HEAD_REF}
-        cd ..
-        cd osi-sensor-model-packaging
-        git checkout ${HEAD_REF} 2>/dev/null || git checkout -b ${HEAD_REF}
-        cd ..
-
+ 
     # build site
     - name: Generate site
       uses: docker://ghcr.io/asam-ev/project-guide-docker:4
