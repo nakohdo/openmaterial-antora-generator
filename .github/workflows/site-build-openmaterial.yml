@@ -2,11 +2,11 @@ name: ASAM OpenMATERIAL build (based on OSI)
 
 on:
   push: # on push
-    branches: [ main, antora-generator ]
+    branches: [ main ] # antora-generator - restrict to default branch, because otherwise will not trigger
   # schedule: # periodic - needed because some of the content is from the other repos
   #   - cron:  '30 5,20 * * *' # twice per day, in the morning and evening.
   repository_dispatch:
-    types: [antora-build-trigger]
+    types: [antora-build-trigger] # is not triggered
   workflow_dispatch:
 
 jobs:
