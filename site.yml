@@ -16,7 +16,7 @@ content:
       branches: [main, v*.*.*]
       tags: [v*,V*]
       start_path: .antora
-    # edit_url: 'https://code.asam.net/internal/examples/antora-content-base-structure/-/blob/{refname}/{path}'
+      edit_url: '{web_url}/blob/{refname}/{path}'
     - url: https://code.asam.net/common/asam-terminology.git # <2>
       start_path: .antora
       tags: [v*,V*]
