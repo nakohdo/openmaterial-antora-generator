@@ -1,8 +1,8 @@
-name: ASAM OpenMATERIAL build (based on OSI)
+name: Build ASAM OpenMATERIAL (nakohdo) 
 
 on:
   push: # on push
-    branches: [ main ] # antora-generator - restrict to default branch, because otherwise will not trigger
+    branches: [ mainX ] # antora-generator - restrict to default branch, because otherwise will not trigger
   # schedule: # periodic - needed because some of the content is from the other repos
   #   - cron:  '30 5,20 * * *' # twice per day, in the morning and evening.
   repository_dispatch:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: Build OpenMATERIAL documentation and deploy it to GitHub pages
+    name: Build OpenMATERIAL documentation (nakohdo)
     runs-on: ubuntu-20.04
 
     services:

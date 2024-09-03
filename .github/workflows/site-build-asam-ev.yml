@@ -1,0 +1,109 @@
+name: Build ASAM OpenMATERIAL (asam-ev) 
+
+on:
+  push: # on push
+    branches: [ main ] # antora-generator - restrict to default branch, because otherwise will not trigger
+  # schedule: # periodic - needed because some of the content is from the other repos
+  #   - cron:  '30 5,20 * * *' # twice per day, in the morning and evening.
+  repository_dispatch:
+    types: [antora-build-trigger] 
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build OpenMATERIAL documentation (asam-ev)
+    runs-on: ubuntu-20.04
+
+    services:
+      kroki:
+        image: yuzutech/kroki:0.15.1
+        env:
+          KROKI_MAX_URI_LENGTH: 8000
+          KROKI_BLOCKDIAG_HOST: blockdiag
+          KROKI_MERMAID_HOST: mermaid
+      blockdiag:
+        image: yuzutech/kroki-blockdiag:0.15.1
+      mermaid:
+        image: yuzutech/kroki-mermaid:0.15.1
+
+
+    steps:
+
+    # checkout repo into folder guide. This is done to match the setup for the local build in docker-compose
+    - name: Checkout with submodules
+      uses: actions/checkout@v4
+      with:
+        path: repo
+        fetch-depth: 0 # test if depth in fetch history is required
+        submodules: recursive
+        
+    # - name: Submodules
+    #   working-directory: repo
+    #   env: 
+    #     ASAM_ANTORA_EXTENSIONS: ${{ secrets.ASAM_ANTORA_EXTENSIONS }}
+    #   run: git clone --recurse-submodules https://asam-antora-extensions:$ASAM_ANTORA_EXTENSIONS@code.asam.net/common/asam-antora-extensions.git
+      
+    - name: Checkout documentation
+      if: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.head_ref }}
+      uses: actions/checkout@v4
+      with:
+        repository: asam-ev/OpenMATERIAL
+        path: repo/OpenMATERIAL #osi-documentation
+        fetch-depth: 0 # test if depth in fetch history is required
+                
+    - name: Apply dispatch information
+      if: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.head_ref }}
+      working-directory: repo
+      run: |      
+        SRC=${{ github.event.client_payload.src }}
+        IFS="/"
+        SRC_REPO=($SRC)
+        unset IFS
+        SRC_REPO=${SRC_REPO[1]}
+        HEAD_REF=${{ github.event.client_payload.head_ref }}
+        echo Branch build for ${HEAD_REF} in ${SRC_REPO}
+        sed -i -r "s|\[(.*)\] # o|[\1,HEAD] # ${SRC_REPO} # o|g" site.yml
+        sed -i -r "s|(- url: .*# retrieve content from remote)|# \1|g" site.yml
+        sed -i -r "s|# (- url: .*# retrieve content locally)|\1|g" site.yml
+        echo Checking out the target branch
+        cd OpenMATERIAL
+        git checkout ${HEAD_REF} 2>/dev/null || git checkout -b ${HEAD_REF}
+        cd ..
+ 
+    # build site
+    - name: Generate site
+      uses: docker://ghcr.io/asam-ev/project-guide-docker:4
+      with:
+        entrypoint: sh
+        args: repo/run-build-osi.sh # modfied based on OSI
+    
+    - name: Upload pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with: 
+        path: ./repo/site
+
+  deploy:
+    # Run if it was not triggered from remote OR the remote source was master or main.
+    if: ${{ github.event_name != 'repository_dispatch' || contains(github.event.client_payload.ref, 'master') || contains(github.event.client_payload.ref, 'main') }}
+    # Allow one concurrent deployment
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+
+    needs: build
+    permissions: 
+      actions: read
+      pages: write
+      id-token: write
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy
+      id: deployment
+      uses: actions/deploy-pages@v4
